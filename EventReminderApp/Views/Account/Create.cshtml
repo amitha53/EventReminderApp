@@ -1,0 +1,85 @@
+﻿@model EventReminderApp.Models.EventReminder
+
+
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>Create</title>
+    <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+    <link href="~/CSS/Create.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="container content">
+        <div class="form">
+            <div class="note">
+                <h2 class="heading">Create</h2>
+            </div>
+            <form method="POST">
+                <div class="form-content">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input class="text-wrapper" type="hidden" name="EventId" value="@Model.EventID" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <input class="text-wrapper" type="hidden" name="UserId" value="@Model.UserID" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="label-wrapper">Subject :</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input type="text" class="text-wrapper" name="subject" placeholder="" value="@Model.Subject" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="label-wrapper">Description :</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input type="text" class="text-wrapper" name="description" placeholder="" value="@Model.Description" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="label-wrapper">Start Date :</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input type="datetime-local" class="text-wrapper" name="startdate" placeholder="" value="@Model.StartDate" required />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="label-wrapper">End Date :</label>
+                        </div>
+                        <div class="col-md-9">
+                            <input type="datetime-local" class="text-wrapper" name="enddate" placeholder="" value="@Model.EndDate" />
+                        </div>
+                    </div>
+
+                    <div id="createBtnSubmit">
+                        <button class="buttonsbt" type="submit">Register</button>
+                    </div>
+                </div>
+                <div class="mainDiv">
+                    <div class="createDiv">
+                        @Html.ActionLink("Back to List", "ListEvents")
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
+

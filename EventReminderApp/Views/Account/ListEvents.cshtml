@@ -31,6 +31,7 @@
             background-color: #dddddd;
         }
     </style>
+
 </head>
 <body>
     <div class="heading">
@@ -92,11 +93,16 @@
             @Html.DisplayFor(modelItem => item.EndDate)
         </td>
         <td>
-            @Html.ActionLink("Edit", "Edit", new { id=item.EventID }) |
-            @Html.ActionLink("Delete", "Delete", new { id=item.EventID })
+            @Html.ActionLink("Edit", "Edit", new { id = item.EventID }) |
+            @Html.ActionLink("Delete", "Delete", new { id = item.EventID })
+            <!--<button type="button" id="btnEdit" class="btn btn-default btnsave">Edit</button>
+                <button type="button" class="btnDel" data-dismiss="modal">Delete</button>-->
         </td>
     </tr>
         }
     </table>
+    <script>
+
+    </script>
 </body>
 </html>

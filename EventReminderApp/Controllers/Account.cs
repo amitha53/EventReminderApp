@@ -13,7 +13,7 @@ namespace EventReminderApp.Controllers
     public class AccountController : Controller
     {
         string Connectionstring = @"Data Source= LENOVO\SQLSERVER; Initial Catalog = dbwebapp; Integrated Security = True";
-
+        EventRepository eventRepository = new EventRepository();
         // GET:  
         public ActionResult Index()
         {
@@ -33,31 +33,13 @@ namespace EventReminderApp.Controllers
 
         public JsonResult GetEvents()
         {
-            List<EventReminder> events = new List<EventReminder>();
-            using (SqlConnection con = new SqlConnection(Connectionstring))
+            string userid = null;
+            if (Session["UserID"] != null)
             {
-                string userid = Session["UserID"].ToString();
-                con.Open();
-                string query = "Select * from tblEvents where UserID=" + userid;
-                SqlCommand cmd = new SqlCommand(query, con);
-                SqlDataReader sdr = cmd.ExecuteReader();
-                DataTable datatable = new DataTable();
-                datatable.Load(sdr);
-                con.Close();
-
-                foreach (DataRow row in datatable.Rows)
-                {
-                    EventReminder listevents = new EventReminder();
-                    listevents.EventID = Convert.ToInt32(row.ItemArray[0]);
-                    listevents.UserID = Convert.ToInt32(row.ItemArray[1]);
-                    listevents.Subject = row.ItemArray[2].ToString();
-                    listevents.Description = row.ItemArray[3].ToString();
-                    listevents.StartDate = Convert.ToDateTime(row.ItemArray[4]);
-                    listevents.EndDate = Convert.ToDateTime(row.ItemArray[5]);
-                    events.Add(listevents);
-                }
+                userid = Session["UserID"].ToString();
             }
-            return new JsonResult { Data = events, JsonRequestBehavior = JsonRequestBehavior.AllowGet };
+            List<EventReminder> eventlist = eventRepository.EventsList(userid);
+            return new JsonResult { Data = eventlist, JsonRequestBehavior = JsonRequestBehavior.AllowGet };
         }
         [HttpPost]
         public JsonResult SaveEvent(EventReminder events)
@@ -65,11 +47,12 @@ namespace EventReminderApp.Controllers
             var status = false;
             using (SqlConnection con = new SqlConnection(Connectionstring))
             {
+                string userid = Session["UserID"].ToString();
                 con.Open();
                 string qry = string.Empty;
                 qry = "Update tblEvents set Subject = '" + events.Subject + "', Description = '" + events.Description +
-                       "', StartDate= '" + events.StartDate + "',EndDate= '" + events.EndDate + "' where EventID=" + events.EventID;
-                this.AddUpdateDeleteSQL(qry);
+                       "', StartDate= '" + events.StartDate + "',EndDate= '" + events.EndDate + "' where EventID= '" + events.EventID + "' and UserID= " + userid;
+                eventRepository.AddUpdateDeleteSQL(qry);
                 status = true;
             }
             return new JsonResult { Data = new { status = status } };
@@ -84,7 +67,7 @@ namespace EventReminderApp.Controllers
                 con.Open();
                 EventReminder events = new EventReminder();
                 string qry = "delete from tblEvents where EventID=" + eventID;
-                this.AddUpdateDeleteSQL(qry);
+                eventRepository.AddUpdateDeleteSQL(qry);
                 status = true;
             }
             return new JsonResult { Data = new { status = status } };
@@ -92,46 +75,20 @@ namespace EventReminderApp.Controllers
 
         public ActionResult Create()
         {
-
+            ViewBag.pageload = "create";
             return View(new EventReminder());
         }
         [HttpPost]
         public ActionResult Create(EventReminder events)
         {
-            using (SqlConnection con = new SqlConnection(Connectionstring))
-            {
-                string userid = Session["UserID"].ToString();
-                con.Open();
-                string qry = string.Empty;
-                qry = "insert into tblEvents(UserID,Subject,Description,StartDate,EndDate)" +
-                    " values('" + userid + "','" + events.Subject + "','" + events.Description + "','" + events.StartDate + "','" + events.EndDate + "')";
-                
-                this.AddUpdateDeleteSQL(qry);
-            }
+            string userid = Session["UserID"].ToString();
+            eventRepository.AddEditEvent(events, userid);
             return RedirectToAction("Calenderlist", "Account");
-        }
-        public EventReminder GetEventId(int eventId)
-        {
-            using (SqlConnection con = new SqlConnection(Connectionstring))
-            {
-                con.Open();
-                string qry = "select * from tblEvents where EventId=" + eventId;
-                DataRow row = GetSQLList(qry).Rows[0];
-                return new EventReminder
-                {
-                    EventID = Convert.ToInt32(row.ItemArray[0]),
-                    UserID = Convert.ToInt32(row.ItemArray[1]),
-                    Subject = row.ItemArray[2].ToString(),
-                    Description = row.ItemArray[3].ToString(),
-                    StartDate = Convert.ToDateTime(row.ItemArray[4]),
-                    EndDate = Convert.ToDateTime(row.ItemArray[5])
-                };
-            }
         }
 
         public ActionResult Edit(int id)
         {
-            EventReminder events = GetEventId(id);
+            EventReminder events = eventRepository.GetEventById(id);
             return View("Create", events);
 
         }
@@ -139,65 +96,22 @@ namespace EventReminderApp.Controllers
         [HttpPost]
         public ActionResult Edit(EventReminder events)
         {
-            using (SqlConnection con = new SqlConnection(Connectionstring))
-            {
-                con.Open();
-                string qry = string.Empty;
-                qry = "Update tblEvents set Subject = '" + events.Subject + "', Description = '" + events.Description +
-                       "', StartDate= '" + events.StartDate + "',EndDate= '" + events.EndDate + "' where EventID=" + events.EventID;
-                this.AddUpdateDeleteSQL(qry);
-            }
+            string userid = Session["UserID"].ToString();
+            eventRepository.AddEditEvent(events, userid);
+            ViewBag.pageload = "edit";
+            
             return RedirectToAction("ListEvents", "Account");
-        }
-
-        public int AddUpdateDeleteSQL(string qry)
-        {
-            using (SqlConnection con = new SqlConnection(Connectionstring))
-            {
-                con.Open();
-                int count = new SqlCommand(qry, con).ExecuteNonQuery();
-                con.Close();
-                return count;
-            }
         }
 
         public ActionResult Delete(int id)
         {
-            using (SqlConnection con = new SqlConnection(Connectionstring))
-            {
-                con.Open();
-                string qry = "delete from tblEvents where EventID=" + id;
-                this.AddUpdateDeleteSQL(qry);
-            }
+            eventRepository.DeleteEvent(id);
             return RedirectToAction("ListEvents", "Account");
         }
         public ActionResult ListEvents()
         {
-            List<EventReminder> eventlist = new List<EventReminder>();
-            using (SqlConnection con = new SqlConnection(Connectionstring))
-            {
-                string userid = Session["UserID"].ToString();
-                con.Open();
-                string query = "Select * from tblEvents where UserID=" + userid;
-                SqlCommand cmd = new SqlCommand(query, con);
-                SqlDataReader sdr = cmd.ExecuteReader();
-                DataTable datatable = new DataTable();
-                datatable.Load(sdr);
-                con.Close();
-
-                foreach (DataRow row in datatable.Rows)
-                {
-                    EventReminder listevents = new EventReminder();
-                    listevents.EventID = Convert.ToInt32(row.ItemArray[0]);
-                    listevents.UserID = Convert.ToInt32(row.ItemArray[1]);
-                    listevents.Subject = row.ItemArray[2].ToString();
-                    listevents.Description = row.ItemArray[3].ToString();
-                    listevents.StartDate = Convert.ToDateTime(row.ItemArray[4]);
-                    listevents.EndDate = Convert.ToDateTime(row.ItemArray[5]);
-                    eventlist.Add(listevents);
-                }
-
-            }
+            string userid = Session["UserID"].ToString();
+            List<EventReminder> eventlist = eventRepository.EventsList( userid);
             return View(eventlist);
         }
         public string Error()
@@ -226,10 +140,10 @@ namespace EventReminderApp.Controllers
             using (SqlConnection con = new SqlConnection(Connectionstring))
             {
                 con.Open();
-                string query = "Select UserID,UserName,Password From tblRegister Where UserName=@UserName and Password=@Password";
+                string query = "Select UserID,EmailId,Password From tblRegister Where EmailId=@EmailId and Password=@Password";
                 SqlCommand cmd = new SqlCommand(query, con);
                 cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@UserName", login.Username);
+                cmd.Parameters.AddWithValue("@EmailId", login.Email);
                 cmd.Parameters.AddWithValue("@Password", login.Password);
 
                 SqlDataAdapter sda = new SqlDataAdapter(cmd);
@@ -240,7 +154,7 @@ namespace EventReminderApp.Controllers
                     DataRow row = datatable.Rows[0];
                     login.UserID = Convert.ToInt32(row["UserID"]);
                     Session["UserID"] = row["UserID"].ToString();
-                    Session["UserName"] = login.Username.ToString();
+                    Session["EmailId"] = login.Email.ToString();
                     return RedirectToAction("Calenderlist", "Account");
                 }
                 else
@@ -249,18 +163,41 @@ namespace EventReminderApp.Controllers
                 }
             }
         }
-        private DataTable GetSQLList(string qry)
+
+        [HttpPost]
+        public JsonResult GoogleLogin(string email, string name, string gender, string lastname, string location)
         {
+            var status = false;
             using (SqlConnection con = new SqlConnection(Connectionstring))
             {
+                string qry;
                 con.Open();
-                SqlCommand cmd = new SqlCommand(qry, con);
-                SqlDataReader sdr = cmd.ExecuteReader();
-                DataTable datatable = new System.Data.DataTable();
-                datatable.Load(sdr);
-                con.Close();
-                return datatable;
+                string query = $"Select UserID,EmailId from tblRegister where EmailId='{email}' ";
+                SqlCommand cmd = new SqlCommand(query, con);
+                cmd.CommandType = CommandType.Text;
+
+                SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                DataTable datatable = new DataTable();
+                sda.Fill(datatable);
+                if (datatable.Rows.Count == 1)
+                {
+                    DataRow row = datatable.Rows[0];
+                    Session["UserID"] = row["UserID"].ToString();
+                    Session["EmailId"] = row["EmailId"].ToString();
+                    //Session["userid"] = uid;
+                   // Session["email"] = mail;
+
+                    status = true;
+                }
+                else
+                {
+                    qry = "insert into tblRegister(UserName,EmailId)" +
+                    " values('" + name + "','" + email + "')";
+                    eventRepository.AddUpdateDeleteSQL(qry);
+                    status = true;
+                }
             }
+            return new JsonResult { Data = new { status = status } };
         }
         public ActionResult LogOut()
         {

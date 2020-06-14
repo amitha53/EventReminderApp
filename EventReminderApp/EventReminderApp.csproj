@@ -158,7 +158,7 @@
     <Compile Include="Controllers\Account.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ValuesController.cs" />
-    <Compile Include="EventClass.cs" />
+    <Compile Include="EventRepository.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>

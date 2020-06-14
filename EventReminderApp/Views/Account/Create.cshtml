@@ -1,26 +1,33 @@
 ﻿@model EventReminderApp.Models.EventReminder
 
 
-
 @{
     Layout = null;
+    string hide = ViewBag.pageload == "details" ? "hidden" : "show";
 }
 
 <!DOCTYPE html>
 
 <html>
 <head>
-    <title>Create</title>
+    <title>Event Reminder</title>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
     <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
     <link href="~/CSS/Create.css" rel="stylesheet" />
+
+    <style>
+
+        .show {
+            visibility: visible;
+        }
+    </style>
 </head>
 <body>
     <div class="container content">
         <div class="form">
             <div class="note">
-                <h2 class="heading">Create</h2>
+                <h2 class="heading">Event Reminder</h2>
             </div>
             <form method="POST">
                 <div class="form-content">
@@ -39,7 +46,7 @@
                             <label class="label-wrapper">Subject :</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="text" class="text-wrapper" name="subject" placeholder="" value="@Model.Subject" required />
+                            <input @hide type="text" class="text-wrapper" name="subject" placeholder="" value="@Model.Subject" required />
                         </div>
                     </div>
                     <div class="row">
@@ -47,7 +54,7 @@
                             <label class="label-wrapper">Description :</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="text" class="text-wrapper" name="description" placeholder="" value="@Model.Description" required />
+                            <input @hide type="text" class="text-wrapper" name="description" placeholder="" value="@Model.Description" required />
                         </div>
                     </div>
                     <div class="row">
@@ -55,7 +62,7 @@
                             <label class="label-wrapper">Start Date :</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="datetime-local" class="text-wrapper" name="startdate" placeholder="" value="@Model.StartDate" required />
+                            <input @hide type="datetime" class="text-wrapper" name="startdate" value="@Model.StartDate" required />
                         </div>
                     </div>
                     <div class="row">
@@ -63,12 +70,13 @@
                             <label class="label-wrapper">End Date :</label>
                         </div>
                         <div class="col-md-9">
-                            <input type="datetime-local" class="text-wrapper" name="enddate" placeholder="" value="@Model.EndDate" />
+                            <input @hide type="datetime" class="text-wrapper" name="enddate" value="@Model.EndDate" required />
                         </div>
                     </div>
 
-                    <div id="createBtnSubmit">
-                        <button class="buttonsbt" type="submit">Register</button>
+                    <div id="createBtnSubmit" class="@hide">
+                        <!--<button class="buttonsbt" type="submit">Submit</button>-->
+                        <input type="submit" name="register-submit" id="createBtnSubmit" class="form-control btn buttonsbt" value="Submit">
                     </div>
                 </div>
                 <div class="mainDiv">

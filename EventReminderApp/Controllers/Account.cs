@@ -182,10 +182,10 @@ namespace EventReminderApp.Controllers
                 if (datatable.Rows.Count == 1)
                 {
                     DataRow row = datatable.Rows[0];
-                    Session["UserID"] = row["UserID"].ToString();
-                    Session["EmailId"] = row["EmailId"].ToString();
-                    //Session["userid"] = uid;
-                   // Session["email"] = mail;
+                    string uid = row["UserID"].ToString();
+                    string mail = row["EmailId"].ToString();
+                    Session["UserID"] = uid;
+                    Session["EmailId"] = mail;
 
                     status = true;
                 }
@@ -202,6 +202,9 @@ namespace EventReminderApp.Controllers
         public ActionResult LogOut()
         {
             FormsAuthentication.SignOut();
+            Session.Clear();
+            Session.Abandon();
+            Response.ClearHeaders();
             return RedirectToAction("Loginform", "Account");
         }
     }

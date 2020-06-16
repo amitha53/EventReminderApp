@@ -10,258 +10,209 @@
     <meta name="viewport" content="width=device-width" />
     <title>Calenderlist</title>
     <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-    <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
+    <!--<script src="//code.jquery.com/jquery-1.11.1.min.js"></script>-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 
-    <link href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.print.css" rel="stylesheet" media="print" />
-    <link href="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.css" rel="stylesheet" />
-
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.print.css" rel="stylesheet" media="print" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.18.1/moment.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.4.0/fullcalendar.min.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+
     <link href="~/CSS/Loginform.css" rel="stylesheet" />
     <link href="~/CSS/Create.css" rel="stylesheet" />
-    <script>
-        $(document).ready(function () {
-            var events = [];
-            var eventSelected = null;
-            FetchEventAndRenderCalender();
-            function FetchEventAndRenderCalender() {
-                events = [];
-                $.ajax({
-                    type: "GET",
-                    url: "/Account/GetEvents",
-                    success: function (data) {
-                        $.each(data, function (i, v) {
-                            events.push({
-                                eventID: v.EventID,
-                                //userID: v.UserID,
-                                title: v.Subject,
-                                description: v.Description,
-                                start: moment(v.StartDate),
-                                end: v.EndDate != null ? moment(v.EndDate) : null,
-                            });
-                        });
-                        // console.log(events);
-                        GenerateCalender(events);
-                    },
-                    error: function (error) {
-                        alert('failed');
-                    }
-                });
-            }
-
-            function GenerateCalender() {
-                $('#calender').fullCalendar('destroy');
-                $('#calender').fullCalendar({
-                    contentHeight: 400,
-                    defaultDate: new Date(),
-                    timeFormat: 'h(:mm)a',
-                    header: {
-                        left: 'prev,next today',
-                        center: 'title',
-                        right: 'month,basicWeek,basicDay,agenda'
-                    },
-                    eventLimit: true,
-                    eventColor: '#DD2476',
-
-                    events: events,
-                    eventClick: function (calEvent, jsEvent, view) {
-                        eventSelected = calEvent;
-                        $('#myModal #eventTitle').text(calEvent.title);
-                        var $description = $('<div/>');
-                        $description.append($('<p/>').html('<b>Start Date:</b>' + calEvent.start.format("DD-MM-YYYY HH:mm a")));
-                        if (calEvent.end != null) {
-                            $description.append($('<p/>').html('<b>End Date:</b>' + calEvent.end.format("DD-MM-YYYY HH:mm a")));
-                        }
-                        $description.append($('<p/>').html('<b>Description:</b>' + calEvent.description));
-                        $('#myModal #pDetails').empty().html($description);
-                        $('#myModal').modal();
-
-                    }
-                });
-            }
-
-            $('#btnEdit').click(function () {
-                openEditForm();
-            });
-
-            function openEditForm() {
-                if (eventSelected != null) {
-                    $('#hdEventID').val(eventSelected.eventID);
-                   // $('#hdUserID').val(eventSelected.userID);
-                    $('#txtSubject').val(eventSelected.title);
-                    $('#txtDescription').val(eventSelected.description);
-                    $('#dtStart').val(eventSelected.start.format("MM-DD-YYYY HH:mm a"));
-                    $('#dtEnd').val(eventSelected.end.format("MM-DD-YYYY HH:mm a"));
-                }
-                $('#myModal').modal('hide');
-                $('#myModalEdit').modal();
-            }
-
-            $('#btnSave').click(function () {
-                if ($('#txtSubject').val().trim() == "") {
-                    alert('Subject required');
-                    return;
-                }
-                if ($('#dtStart').val().trim() == "") {
-                    alert('Start date required');
-                    return;
-                }
-                else {
-                    var startDate = moment($('#dtStart').val(), "MM-DD-YYYY HH:mm a").toDate();
-                    var endDate = moment($('#dtEnd').val(), "MM-DD-YYYY HH:mm a").toDate();
-                    if (startDate > endDate) {
-                        alert('Invalid end date');
-                        return;
-                    }
-                }
-
-                var data = {
-                    EventID: $('#hdEventID').val(),
-                    //UserID: $('#hdUserID').val(),
-                    Subject: $('#txtSubject').val().trim(),
-                    Description: $('#txtDescription').val(),
-                    StartDate: $('#dtStart').val(),
-                    EndDate: $('#dtEnd').val()
-                }
-                console.log(data);
-               // var datatosend = JSON.stringify(data);
-                SaveEvent(data);
-            });
-            function SaveEvent(data) {
-                console.log(data);
-                $.ajax({
-                    type: "POST",
-                    url: "/Account/SaveEvent",
-                    data: data,
-                    success: function (data) {
-                        if (data.status) {
-                            FetchEventAndRenderCalender();
-                            $('#myModalSave').modal('hide');
-                        }
-
-                    },
-                    error: function () {
-                        alert('Failed');
-                    }
-                });
-            }
-
-            $('#btnDelete').click(function () {
-                if (eventSelected != null && confirm('Are you sure?')) {
-                    $.ajax({
-                        type: "POST",
-                        url: "/Account/DeleteEvent",
-                        data: { 'eventID': eventSelected.eventID },
-                        success: function (data) {
-                            if (data.status) {
-                                FetchEventAndRenderCalender();
-                                $('#myModal').modal('hide');
-                            }
-                        },
-                        error: function () {
-                            alert('Failed');
-                        }
-                    });
-                }
-            });
-        });
-/**/</script>
+    <script src="~/Scripts/Calender.js"></script>
 </head>
-<body>
-    <div class="mainDiv">
+    <body>
+        <div class="container">
+            <div class="note">
+                <h2 class="heading">Event Reminder</h2>
+            </div>
+            <br>
+            <!-- Nav tabs -->
+    <ul class="nav nav-tabs" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" data-toggle="tab" href="#create">Create</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#calview">Calendar List</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#indexview">List View</a>
+        </li>
+    </ul>
+    <!-- Tab panes -->
+    <div class="tab-content">
+        <!--Create Page-->
+        <div id="create" class="container tab-pane active">
+            <div class="container content">
+                <div class="form">
+                    <form method="POST">
+                        <div class="form-content">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input class="text-wrapper" type="hidden" name="EventId" required />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="hidden" name="UserId" required />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="label-wrapper">Subject :</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <input type="text" class="text-wrapper" name="subject" placeholder="" required />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="label-wrapper">Description :</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <input type="text" class="text-wrapper" name="description" placeholder="" required />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="label-wrapper">Start Date :</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <input type="datetime" class="text-wrapper" name="startdate" required />
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <label class="label-wrapper">End Date :</label>
+                                </div>
+                                <div class="col-md-9">
+                                    <input type="datetime" class="text-wrapper" name="enddate" required />
+                                </div>
+                            </div>
+
+                            <div id="createBtnSubmit">
+                                <input type="submit" name="register-submit" id="createBtnSubmit" class="form-control btn buttonsbt" value="Submit">
+                            </div>
+                        </div>
+                        <div class="mainDiv">
+                            <div class="createDiv">
+                                @Html.ActionLink("Back to List", "ListEvents")
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!--Calendar View-->
+        <div id="calview" class="container tab-pane fade">
+            <div id="calender"> </div>
+            <div id="myModal" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title"><span id="eventTitle"></span></h4>
+                        </div>
+                        <div class="modal-body">
+                            <button id="btnDelete" class="btn btn-default btn-sm pull-right">
+                                <span class="glyphicon glyphicon-remove"></span> Remove
+                            </button>
+                            <button id="btnEdit" class="btn btn-default btn-sm pull-right" style="margin-right:5px;">
+                                <span class="glyphicon glyphicon-pencil"></span> Edit
+                            </button>
+                            <p id="pDetails"></p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="myModalEdit" class="modal fade" role="dialog">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal">&times;</button>
+                            <h4 class="modal-title">Edit Event</h4>
+                        </div>
+                        <form method="POST">
+                            <div class="form-content">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <input class="text-wrapper" type="hidden" name="EventId" id="hdEventID" required />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <input class="text-wrapper" type="hidden" name="UserId" id="hdUserID" required />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="label-wrapper">Subject :</label>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <input type="text" class="text-wrapper" id="txtSubject" name="subject" placeholder="" required />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="label-wrapper">Description :</label>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <input type="text" class="text-wrapper" id="txtDescription" name="description" placeholder="" required />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="label-wrapper">Start Date :</label>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <input type="text" class="text-wrapper" id="dtStart" name="startdate" placeholder="" required />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <label class="label-wrapper">End Date :</label>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <input type="text" class="text-wrapper" id="dtEnd" name="enddate" placeholder="" />
+                                    </div>
+                                </div>
+
+                                <button type="button" id="btnSave" class="btn btn-default btnsave">Save</button>
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--List View-->
+        <div id="indexview" class="container tab-pane fade">
+            <br>
+            <h3>Menu 2</h3>
+            <p>Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam.</p>
+        </div>
+    </div>
+    <!-- <div class="mainDiv">
         <div class="createDiv">
-            @Html.ActionLink("Create", "Create")
+            @*Html.ActionLink("Create", "Create")*@
         </div>
         <div class="calDiv">
-            @Html.ActionLink("EventsList", "ListEvents")
+             @*Html.ActionLink("EventsList", "ListEvents")*@
         </div>
         <div class="deleteDiv">
-            @Html.ActionLink("Logout", "Logout")
+             @*Html.ActionLink("Logout", "Logout")*@
         </div>
+    </div>-->
     </div>
-    <div id="calender"> </div>
-    <div id="myModal" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title"><span id="eventTitle"></span></h4>
-                </div>
-                <div class="modal-body">
-                    <button id="btnDelete" class="btn btn-default btn-sm pull-right">
-                        <span class="glyphicon glyphicon-remove"></span> Remove
-                    </button>
-                    <button id="btnEdit" class="btn btn-default btn-sm pull-right" style="margin-right:5px;">
-                        <span class="glyphicon glyphicon-pencil"></span> Edit
-                    </button>
-                    <p id="pDetails"></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="myModalEdit" class="modal fade" role="dialog">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal">&times;</button>
-                    <h4 class="modal-title">Edit Event</h4>
-                </div>
-                <form method="POST">
-                    <div class="form-content">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <input class="text-wrapper" type="hidden" name="EventId" id="hdEventID" required />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-8">
-                                <input class="text-wrapper" type="hidden" name="UserId" id="hdUserID" required />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label class="label-wrapper">Subject :</label>
-                            </div>
-                            <div class="col-md-9">
-                                <input type="text" class="text-wrapper" id="txtSubject" name="subject" placeholder="" required />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label class="label-wrapper">Description :</label>
-                            </div>
-                            <div class="col-md-9">
-                                <input type="text" class="text-wrapper" id="txtDescription" name="description" placeholder="" required />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label class="label-wrapper">Start Date :</label>
-                            </div>
-                            <div class="col-md-9">
-                                <input type="text" class="text-wrapper" id="dtStart" name="startdate" placeholder="" required />
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-3">
-                                <label class="label-wrapper">End Date :</label>
-                            </div>
-                            <div class="col-md-9">
-                                <input type="text" class="text-wrapper" id="dtEnd" name="enddate" placeholder="" />
-                            </div>
-                        </div>
-
-                        <button type="button" id="btnSave" class="btn btn-default btnsave">Save</button>
-                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</body>
+    </body>
 </html>
